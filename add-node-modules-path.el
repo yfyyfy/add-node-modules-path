@@ -72,13 +72,23 @@ Any path found is added to the `exec-path'."
     (if roots
         (progn
           (make-local-variable 'exec-path)
+          (make-local-variable 'add-node-modules-path-exec-path-around-path-to-add)
           (while roots
             (add-to-list 'exec-path (car roots))
+            (setq add-node-modules-path-exec-path-around-path-to-add (file-local-name (car roots)))
             (when add-node-modules-path-debug
               (message (concat "added " (car roots) " to exec-path")))
             (setq roots (cdr roots))))
       (when add-node-modules-path-debug
         (message (concat "node_modules/.bin not found for " file))))))
+
+(setq add-node-modules-path-exec-path-around-path-to-add nil)
+(defun add-node-modules-path-exec-path-around (f &rest args)
+  (let ((path (apply f args)))
+    (if add-node-modules-path-exec-path-around-path-to-add
+    (cons add-node-modules-path-exec-path-around-path-to-add path)
+    )))
+(advice-add 'exec-path :around #'add-node-modules-path-exec-path-around)
 
 (provide 'add-node-modules-path)
 
